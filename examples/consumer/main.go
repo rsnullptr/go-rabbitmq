@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
+	rabbitmq "github.com/rsnullptr/go-rabbitmq"
 	"github.com/streadway/amqp"
-	rabbitmq "github.com/wagslane/go-rabbitmq"
 )
 
 func main() {
@@ -21,14 +21,16 @@ func main() {
 			// true to ACK, false to NACK
 			return true
 		},
-		"my_queue",
-		[]string{"routing_key", "routing_key_2"},
+		"my_queue1",
+		[]string{"routing_key1", "routing_key_2"},
 		rabbitmq.WithConsumeOptionsConcurrency(10),
-		rabbitmq.WithConsumeOptionsQueueDurable,
-		rabbitmq.WithConsumeOptionsQuorum,
-		rabbitmq.WithConsumeOptionsBindingExchangeName("events"),
-		rabbitmq.WithConsumeOptionsBindingExchangeKind("topic"),
-		rabbitmq.WithConsumeOptionsBindingExchangeDurable,
+		func(options *rabbitmq.ConsumeOptions) {
+			rabbitmq.WithQueueDeclareOptionsDurable(&options.QueueDeclare)
+			rabbitmq.WithQueueDeclareOptionsQuorum(&options.QueueDeclare)
+			rabbitmq.WithBindingExchangeOptionsExchangeName("events", &options.BindingExchange)
+			rabbitmq.WithBindingExchangeOptionsExchangeKind("topic", &options.BindingExchange)
+			rabbitmq.WithBindingExchangeOptionsExchangeDurable(&options.BindingExchange)
+		},
 	)
 	if err != nil {
 		log.Fatal(err)
