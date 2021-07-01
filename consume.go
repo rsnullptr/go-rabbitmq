@@ -173,17 +173,17 @@ func (consumer Consumer) startGoroutines(
 
 	_, err := consumer.chManager.channel.QueueDeclare(
 		queue,
-		consumeOptions.QueueDurable,
-		consumeOptions.QueueAutoDelete,
-		consumeOptions.QueueExclusive,
-		consumeOptions.QueueNoWait,
-		tableToAMQPTable(consumeOptions.QueueArgs),
+		consumeOptions.QueueDeclare.QueueDurable,
+		consumeOptions.QueueDeclare.QueueAutoDelete,
+		consumeOptions.QueueDeclare.QueueExclusive,
+		consumeOptions.QueueDeclare.QueueNoWait,
+		tableToAMQPTable(consumeOptions.QueueDeclare.QueueArgs),
 	)
 	if err != nil {
 		return err
 	}
 
-	if consumeOptions.BindingExchange != nil {
+	if consumeOptions.BindingExchange.Name != "" {
 		exchange := consumeOptions.BindingExchange
 		if exchange.Name == "" {
 			return fmt.Errorf("binding to exchange but name not specified")
@@ -205,8 +205,8 @@ func (consumer Consumer) startGoroutines(
 				queue,
 				routingKey,
 				exchange.Name,
-				consumeOptions.BindingNoWait,
-				tableToAMQPTable(consumeOptions.BindingArgs),
+				consumeOptions.BindingExchange.BindingNoWait,
+				tableToAMQPTable(consumeOptions.BindingExchange.BindingArgs),
 			)
 			if err != nil {
 				return err
