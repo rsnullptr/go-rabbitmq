@@ -21,7 +21,7 @@ func do() {
 		func(options *rabbitmq.PublisherOptions) {
 			options.BindingExchange = rabbitmq.BindingExchangeOptions{
 				DoBinding:     true,
-				Name:          "beautifulExchange5",
+				Name:          "pubexch",
 				Kind:          "topic",
 				Durable:       true,
 				AutoDelete:    false,
@@ -32,12 +32,12 @@ func do() {
 			}
 
 			options.RoutingKeys = []string{
-				"routing_key5",
+				"publisher-key-1",
 			}
 
 			options.QueueDeclare = rabbitmq.QueueDeclareOptions{
 				DoDeclare:       true,
-				QueueName:       "my_queue5",
+				QueueName:       "pub_queue",
 				QueueDurable:    true,
 				QueueAutoDelete: false,
 				QueueExclusive:  false,
@@ -69,11 +69,11 @@ func do() {
 	for {
 		err = publisher.Publish(
 			[]byte(fmt.Sprintf("AAA %d", idx)),
-			[]string{"routing_key5"},
+			[]string{"publisher-key-1"},
 			rabbitmq.WithPublishOptionsContentType("application/json"),
 			rabbitmq.WithPublishOptionsMandatory,
 			rabbitmq.WithPublishOptionsPersistentDelivery,
-			rabbitmq.WithPublishOptionsExchange("beautifulExchange5"),
+			rabbitmq.WithPublishOptionsExchange("pubexch"),
 		)
 		if err != nil {
 			log.Fatal(err)

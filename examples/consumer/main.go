@@ -20,17 +20,39 @@ func main() {
 			// true to ACK, false to NACK
 			return true
 		},
-		"my_queue5",
-		[]string{"routing_key_7"},
+		"my_queue7",
+		[]string{"publisher-key-1"},
 		rabbitmq.WithConsumeOptionsConcurrency(10),
 		func(options *rabbitmq.ConsumeOptions) {
-			rabbitmq.WithQueueDeclare(&options.QueueDeclare)
-			rabbitmq.WithQueueDeclareOptionsDurable(&options.QueueDeclare)
-			rabbitmq.WithQueueDeclareOptionsQuorum(&options.QueueDeclare)
-			rabbitmq.WithBindingExchangeOptionsExchangeName("events", &options.BindingExchange)
-			rabbitmq.WithBindingExchangeOptionsExchangeKind("topic", &options.BindingExchange)
-			rabbitmq.WithBindingExchangeOptionsExchangeDurable(&options.BindingExchange)
-			options.Qos.QOSPrefetchCount = 1
+			options.BindingExchange = rabbitmq.BindingExchangeOptions{
+				DoBinding:     true,
+				Name:          "pubexch",
+				Kind:          "topic",
+				Durable:       true,
+				AutoDelete:    false,
+				Internal:      false,
+				NoWait:        true,
+				ExchangeArgs:  nil,
+				BindingNoWait: false,
+			}
+
+			options.QueueDeclare = rabbitmq.QueueDeclareOptions{
+				DoDeclare:       true,
+				QueueName:       "my_queue7",
+				QueueDurable:    true,
+				QueueAutoDelete: false,
+				QueueExclusive:  false,
+				QueueNoWait:     false,
+				QueueArgs:       rabbitmq.Table{},
+			}
+
+			options.QueueDeclare.QueueArgs["x-queue-type"] = "quorum"
+
+			options.Qos = rabbitmq.QosOptions{
+				QOSPrefetchCount: 1,
+				QOSPrefetchSize:  0,
+				QOSGlobal:        false,
+			}
 		},
 	)
 	if err != nil {
