@@ -171,24 +171,26 @@ func (consumer Consumer) startGoroutines(
 	consumer.chManager.channelMux.RLock()
 	defer consumer.chManager.channelMux.RUnlock()
 
-	_, err := consumer.chManager.channel.QueueDeclare(
-		queue,
-		consumeOptions.QueueDeclare.QueueDurable,
-		consumeOptions.QueueDeclare.QueueAutoDelete,
-		consumeOptions.QueueDeclare.QueueExclusive,
-		consumeOptions.QueueDeclare.QueueNoWait,
-		tableToAMQPTable(consumeOptions.QueueDeclare.QueueArgs),
-	)
-	if err != nil {
-		return err
+	if consumeOptions.QueueDeclare.DoDeclare {
+		_, err := consumer.chManager.channel.QueueDeclare(
+			queue,
+			consumeOptions.QueueDeclare.QueueDurable,
+			consumeOptions.QueueDeclare.QueueAutoDelete,
+			consumeOptions.QueueDeclare.QueueExclusive,
+			consumeOptions.QueueDeclare.QueueNoWait,
+			tableToAMQPTable(consumeOptions.QueueDeclare.QueueArgs),
+		)
+		if err != nil {
+			return err
+		}
 	}
 
-	if consumeOptions.BindingExchange.Name != "" {
+	if consumeOptions.BindingExchange.DoBinding {
 		exchange := consumeOptions.BindingExchange
 		if exchange.Name == "" {
 			return fmt.Errorf("binding to exchange but name not specified")
 		}
-		err = consumer.chManager.channel.ExchangeDeclare(
+		err := consumer.chManager.channel.ExchangeDeclare(
 			exchange.Name,
 			exchange.Kind,
 			exchange.Durable,
@@ -214,10 +216,10 @@ func (consumer Consumer) startGoroutines(
 		}
 	}
 
-	err = consumer.chManager.channel.Qos(
-		consumeOptions.QOSPrefetch,
-		0,
-		consumeOptions.QOSGlobal,
+	err := consumer.chManager.channel.Qos(
+		consumeOptions.Qos.QOSPrefetchCount,
+		consumeOptions.Qos.QOSPrefetchSize,
+		consumeOptions.Qos.QOSGlobal,
 	)
 	if err != nil {
 		return err

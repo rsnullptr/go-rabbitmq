@@ -3,6 +3,7 @@ package rabbitmq
 // BindingExchangeOptions are used when binding to an exchange.
 // it will verify the exchange is created before binding to it.
 type BindingExchangeOptions struct {
+	DoBinding     bool
 	Name          string
 	Kind          string
 	Durable       bool
@@ -16,12 +17,25 @@ type BindingExchangeOptions struct {
 
 // QueueDeclareOptions arguments to declare a queue
 type QueueDeclareOptions struct {
+	DoDeclare       bool
 	QueueName       string
 	QueueDurable    bool
 	QueueAutoDelete bool
 	QueueExclusive  bool
 	QueueNoWait     bool
 	QueueArgs       Table
+}
+
+// QosOptions configuration
+type QosOptions struct {
+	QOSPrefetchCount int
+	QOSPrefetchSize  int
+	QOSGlobal        bool
+}
+
+// WithQueueDeclare define if queue will be declare or not
+func WithQueueDeclare(options *QueueDeclareOptions) {
+	options.DoDeclare = true
 }
 
 // WithQueueDeclareOptionsDurable sets the queue to durable, which means it won't
@@ -117,4 +131,9 @@ func WithBindingExchangeOptionsExchangeArgs(args Table, options *BindingExchange
 // the channel will not be closed with an error.
 func WithBindingExchangeOptionsNoWait(options *BindingExchangeOptions) {
 	options.BindingNoWait = true
+}
+
+// WithBindingExchange define if the exchange is to be binded or not
+func WithBindingExchange(options *BindingExchangeOptions) {
+	options.DoBinding = true
 }

@@ -1,6 +1,6 @@
 package rabbitmq
 
-// getDefaultConsumeOptions descibes the options that will be used when a value isn't provided
+// getDefaultConsumeOptions describes the options that will be used when a value isn't provided
 func getDefaultConsumeOptions() ConsumeOptions {
 	return ConsumeOptions{
 		QueueDeclare: QueueDeclareOptions{
@@ -22,9 +22,12 @@ func getDefaultConsumeOptions() ConsumeOptions {
 			BindingArgs:   nil,
 			ExchangeArgs:  nil,
 		},
+		Qos: QosOptions{
+			QOSPrefetchCount: 0,
+			QOSPrefetchSize:  0,
+			QOSGlobal:        false,
+		},
 		Concurrency:       1,
-		QOSPrefetch:       0,
-		QOSGlobal:         false,
 		ConsumerName:      "",
 		ConsumerAutoAck:   false,
 		ConsumerExclusive: false,
@@ -38,9 +41,8 @@ func getDefaultConsumeOptions() ConsumeOptions {
 type ConsumeOptions struct {
 	QueueDeclare      QueueDeclareOptions
 	BindingExchange   BindingExchangeOptions
+	Qos               QosOptions
 	Concurrency       int
-	QOSPrefetch       int
-	QOSGlobal         bool
 	ConsumerName      string
 	ConsumerAutoAck   bool
 	ConsumerExclusive bool
@@ -62,7 +64,7 @@ func WithConsumeOptionsConcurrency(concurrency int) func(*ConsumeOptions) {
 // This doesn't affect the handler, messages are still processed one at a time.
 func WithConsumeOptionsQOSPrefetch(prefetchCount int) func(*ConsumeOptions) {
 	return func(options *ConsumeOptions) {
-		options.QOSPrefetch = prefetchCount
+		options.Qos.QOSPrefetchCount = prefetchCount
 	}
 }
 
@@ -70,7 +72,7 @@ func WithConsumeOptionsQOSPrefetch(prefetchCount int) func(*ConsumeOptions) {
 // these QOS settings apply to ALL existing and future
 // consumers on all channels on the same connection
 func WithConsumeOptionsQOSGlobal(options *ConsumeOptions) {
-	options.QOSGlobal = true
+	options.Qos.QOSGlobal = true
 }
 
 // WithConsumeOptionsConsumerName returns a function that sets the name on the server of this consumer

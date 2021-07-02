@@ -8,6 +8,7 @@ type PublisherOptions struct {
 	RoutingKeys     []string
 	BindingExchange BindingExchangeOptions
 	QueueDeclare    QueueDeclareOptions
+	Qos             QosOptions
 }
 
 // WithPublisherOptionsLogging sets logging to true on the consumer options

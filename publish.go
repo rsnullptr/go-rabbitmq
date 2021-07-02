@@ -85,7 +85,8 @@ func NewPublisher(url string, config amqp.Config, optionFuncs ...func(*Publisher
 	defer publisher.chManager.channelMux.RUnlock()
 
 	// valid queue name, declare it
-	if options.QueueDeclare.QueueName != "" {
+	if options.QueueDeclare.DoDeclare {
+
 		_, err = publisher.chManager.channel.QueueDeclare(
 			options.QueueDeclare.QueueName,
 			options.QueueDeclare.QueueDurable,
@@ -101,8 +102,9 @@ func NewPublisher(url string, config amqp.Config, optionFuncs ...func(*Publisher
 	}
 
 	//valid name, bind it
-	if options.BindingExchange.Name != "" {
+	if options.BindingExchange.DoBinding {
 		exchange := options.BindingExchange
+
 		err = publisher.chManager.channel.ExchangeDeclare(
 			exchange.Name,
 			exchange.Kind,
@@ -131,7 +133,13 @@ func NewPublisher(url string, config amqp.Config, optionFuncs ...func(*Publisher
 		}
 	}
 
-	return publisher, returnChan, nil
+	err = publisher.chManager.channel.Qos(
+		options.Qos.QOSPrefetchCount,
+		options.Qos.QOSPrefetchSize,
+		options.Qos.QOSGlobal,
+	)
+
+	return publisher, returnChan, err
 }
 
 // Publish publishes the provided data to the given routing keys over the connection

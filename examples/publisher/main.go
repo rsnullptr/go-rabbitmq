@@ -1,19 +1,27 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"os"
+	"time"
 
 	"github.com/streadway/amqp"
 	"github.com/wagslane/go-rabbitmq"
 )
 
 func main() {
+	do()
+}
+
+func do() {
 	publisher, returns, err := rabbitmq.NewPublisher(
 		"amqp://guest:guest@localhost", amqp.Config{},
 		rabbitmq.WithPublisherOptionsLogging,
 		func(options *rabbitmq.PublisherOptions) {
 			options.BindingExchange = rabbitmq.BindingExchangeOptions{
-				Name:          "beautifulExchange1",
+				DoBinding:     true,
+				Name:          "beautifulExchange5",
 				Kind:          "topic",
 				Durable:       true,
 				AutoDelete:    false,
@@ -24,11 +32,12 @@ func main() {
 			}
 
 			options.RoutingKeys = []string{
-				"routing_key1",
+				"routing_key5",
 			}
 
 			options.QueueDeclare = rabbitmq.QueueDeclareOptions{
-				QueueName:       "my_queue1",
+				DoDeclare:       true,
+				QueueName:       "my_queue5",
 				QueueDurable:    true,
 				QueueAutoDelete: false,
 				QueueExclusive:  false,
@@ -37,21 +46,17 @@ func main() {
 			}
 
 			options.QueueDeclare.QueueArgs["x-queue-type"] = "quorum"
+
+			options.Qos = rabbitmq.QosOptions{
+				QOSPrefetchCount: 1,
+				QOSPrefetchSize:  0,
+				QOSGlobal:        true,
+			}
 		},
 	)
 	if err != nil {
 		log.Fatal(err)
-	}
-	err = publisher.Publish(
-		[]byte("hello, world1"),
-		[]string{"routing_key1"},
-		rabbitmq.WithPublishOptionsContentType("application/json"),
-		rabbitmq.WithPublishOptionsMandatory,
-		rabbitmq.WithPublishOptionsPersistentDelivery,
-		rabbitmq.WithPublishOptionsExchange("events"),
-	)
-	if err != nil {
-		log.Fatal(err)
+		return
 	}
 
 	go func() {
@@ -59,4 +64,23 @@ func main() {
 			log.Printf("message returned from server: %s", string(r.Body))
 		}
 	}()
+
+	idx := int64(0)
+	for {
+		err = publisher.Publish(
+			[]byte(fmt.Sprintf("AAA %d", idx)),
+			[]string{"routing_key5"},
+			rabbitmq.WithPublishOptionsContentType("application/json"),
+			rabbitmq.WithPublishOptionsMandatory,
+			rabbitmq.WithPublishOptionsPersistentDelivery,
+			rabbitmq.WithPublishOptionsExchange("beautifulExchange5"),
+		)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Fprintf(os.Stderr, "%d \n", idx)
+		idx++
+		time.Sleep(time.Millisecond * 1000)
+	}
 }

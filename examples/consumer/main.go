@@ -1,10 +1,9 @@
 package main
 
 import (
-	"log"
-
 	"github.com/streadway/amqp"
 	"github.com/wagslane/go-rabbitmq"
+	"log"
 )
 
 func main() {
@@ -21,15 +20,17 @@ func main() {
 			// true to ACK, false to NACK
 			return true
 		},
-		"my_queue1",
-		[]string{"routing_key1", "routing_key_2"},
+		"my_queue5",
+		[]string{"routing_key_7"},
 		rabbitmq.WithConsumeOptionsConcurrency(10),
 		func(options *rabbitmq.ConsumeOptions) {
+			rabbitmq.WithQueueDeclare(&options.QueueDeclare)
 			rabbitmq.WithQueueDeclareOptionsDurable(&options.QueueDeclare)
 			rabbitmq.WithQueueDeclareOptionsQuorum(&options.QueueDeclare)
 			rabbitmq.WithBindingExchangeOptionsExchangeName("events", &options.BindingExchange)
 			rabbitmq.WithBindingExchangeOptionsExchangeKind("topic", &options.BindingExchange)
 			rabbitmq.WithBindingExchangeOptionsExchangeDurable(&options.BindingExchange)
+			options.Qos.QOSPrefetchCount = 1
 		},
 	)
 	if err != nil {
